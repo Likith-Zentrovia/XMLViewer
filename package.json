@@ -1,0 +1,21 @@
+{
+  "name": "xml-viewer",
+  "version": "1.0.0",
+  "description": "XML Viewer - Preview XML content with images from ZIP files in browser",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "xml",
+    "viewer",
+    "preview",
+    "pdf-to-xml"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

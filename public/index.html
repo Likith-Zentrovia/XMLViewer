@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XML Viewer - PDF to XML Translation Preview</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>XML Viewer</h1>
+            <p class="subtitle">Preview PDF to XML translations with embedded images</p>
+        </header>
+
+        <div class="upload-section" id="uploadSection">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <h2>Drop ZIP file here</h2>
+                <p>or click to browse</p>
+                <input type="file" id="fileInput" accept=".zip" hidden>
+                <p class="file-hint">ZIP should contain an XML file and a multimedia folder with images</p>
+            </div>
+        </div>
+
+        <div class="controls" id="controls" style="display: none;">
+            <button id="backBtn" class="btn btn-secondary">← Upload New File</button>
+            <div class="file-info">
+                <span id="fileName"></span>
+            </div>
+            <div class="view-options">
+                <button id="viewRendered" class="btn btn-primary active">Rendered View</button>
+                <button id="viewRaw" class="btn btn-secondary">Raw XML</button>
+            </div>
+        </div>
+
+        <div class="preview-section" id="previewSection" style="display: none;">
+            <div class="preview-container">
+                <div id="renderedView" class="preview-content"></div>
+                <pre id="rawView" class="preview-content raw-xml" style="display: none;"></pre>
+            </div>
+        </div>
+
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Processing ZIP file...</p>
+        </div>
+
+        <div class="error" id="error" style="display: none;">
+            <div class="error-icon">⚠️</div>
+            <p id="errorMessage"></p>
+            <button id="retryBtn" class="btn btn-primary">Try Again</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
