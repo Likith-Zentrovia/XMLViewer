@@ -104,6 +104,39 @@ header .subtitle {
     color: #555;
 }
 
+/* XML Selector */
+.xml-selector-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.xml-selector-container label {
+    font-weight: 500;
+    color: #555;
+}
+
+.xml-selector {
+    padding: 8px 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background: white;
+    color: #333;
+    cursor: pointer;
+    min-width: 200px;
+    transition: border-color 0.2s ease;
+}
+
+.xml-selector:hover {
+    border-color: #667eea;
+}
+
+.xml-selector:focus {
+    outline: none;
+    border-color: #764ba2;
+}
+
 .view-options {
     display: flex;
     gap: 10px;
