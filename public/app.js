@@ -1,8 +1,8 @@
 // XML Viewer Application
 class XMLViewer {
     constructor() {
-        this.xmlContent = null;
-        this.rawXmlContent = '';
+        this.xmlFiles = []; // Array of {name, content, parsed}
+        this.currentXmlIndex = 0;
         this.images = new Map(); // Map of image filename to blob URL
         this.currentView = 'rendered';
 
@@ -26,6 +26,8 @@ class XMLViewer {
         this.retryBtn = document.getElementById('retryBtn');
         this.viewRendered = document.getElementById('viewRendered');
         this.viewRaw = document.getElementById('viewRaw');
+        this.xmlSelector = document.getElementById('xmlSelector');
+        this.xmlSelectorContainer = document.getElementById('xmlSelectorContainer');
     }
 
     initEventListeners() {
@@ -61,6 +63,14 @@ class XMLViewer {
         // View toggle
         this.viewRendered.addEventListener('click', () => this.switchView('rendered'));
         this.viewRaw.addEventListener('click', () => this.switchView('raw'));
+
+        // XML file selector
+        if (this.xmlSelector) {
+            this.xmlSelector.addEventListener('change', (e) => {
+                this.currentXmlIndex = parseInt(e.target.value);
+                this.renderCurrentXML();
+            });
+        }
     }
 
     handleFileSelect(e) {
@@ -90,7 +100,7 @@ class XMLViewer {
     }
 
     async extractContents(zip) {
-        let xmlFile = null;
+        const xmlFiles = [];
         const imageFiles = [];
 
         // Iterate through all files in the ZIP
@@ -100,9 +110,9 @@ class XMLViewer {
             const fileName = path.split('/').pop().toLowerCase();
             const extension = fileName.split('.').pop();
 
-            // Find XML file
+            // Find ALL XML files
             if (extension === 'xml') {
-                xmlFile = zipEntry;
+                xmlFiles.push({ path, entry: zipEntry, name: path.split('/').pop() });
             }
 
             // Find image files (in any folder, typically 'multimedia')
@@ -111,21 +121,33 @@ class XMLViewer {
             }
         }
 
-        if (!xmlFile) {
+        if (xmlFiles.length === 0) {
             throw new Error('No XML file found in the ZIP');
         }
 
-        // Extract XML content
-        this.rawXmlContent = await xmlFile.async('text');
+        // Sort XML files by name for consistent ordering
+        xmlFiles.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
 
-        // Parse XML
-        const parser = new DOMParser();
-        this.xmlContent = parser.parseFromString(this.rawXmlContent, 'text/xml');
+        // Extract and parse all XML files
+        this.xmlFiles = [];
+        for (const xmlFile of xmlFiles) {
+            const content = await xmlFile.entry.async('text');
+            const parser = new DOMParser();
+            const parsed = parser.parseFromString(content, 'text/xml');
 
-        // Check for parsing errors
-        const parseError = this.xmlContent.querySelector('parsererror');
-        if (parseError) {
-            throw new Error('Invalid XML: ' + parseError.textContent);
+            // Check for parsing errors
+            const parseError = parsed.querySelector('parsererror');
+            if (parseError) {
+                console.warn(`Warning: Invalid XML in ${xmlFile.name}: ${parseError.textContent}`);
+            }
+
+            this.xmlFiles.push({
+                name: xmlFile.name,
+                path: xmlFile.path,
+                content: content,
+                parsed: parsed,
+                hasError: !!parseError
+            });
         }
 
         // Extract images and create blob URLs
@@ -147,14 +169,43 @@ class XMLViewer {
             this.images.set(nameWithoutExt.toLowerCase(), url);
         }
 
-        // Render the XML
-        this.renderXML();
+        // Update the XML selector dropdown
+        this.updateXmlSelector();
+
+        // Render the first XML
+        this.currentXmlIndex = 0;
+        this.renderCurrentXML();
     }
 
-    renderXML() {
-        const root = this.xmlContent.documentElement;
+    updateXmlSelector() {
+        if (!this.xmlSelector || !this.xmlSelectorContainer) return;
+
+        // Clear existing options
+        this.xmlSelector.innerHTML = '';
+
+        // Add options for each XML file
+        this.xmlFiles.forEach((xmlFile, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = xmlFile.name + (xmlFile.hasError ? ' (parse error)' : '');
+            this.xmlSelector.appendChild(option);
+        });
+
+        // Show/hide selector based on number of XML files
+        if (this.xmlFiles.length > 1) {
+            this.xmlSelectorContainer.style.display = 'flex';
+        } else {
+            this.xmlSelectorContainer.style.display = 'none';
+        }
+    }
+
+    renderCurrentXML() {
+        const xmlFile = this.xmlFiles[this.currentXmlIndex];
+        if (!xmlFile) return;
+
+        const root = xmlFile.parsed.documentElement;
         this.renderedView.innerHTML = `<div class="xml-document">${this.renderElement(root)}</div>`;
-        this.rawView.textContent = this.formatXML(this.rawXmlContent);
+        this.rawView.textContent = this.formatXML(xmlFile.content);
     }
 
     renderElement(element) {
@@ -551,8 +602,8 @@ class XMLViewer {
             URL.revokeObjectURL(url);
         }
         this.images.clear();
-        this.xmlContent = null;
-        this.rawXmlContent = '';
+        this.xmlFiles = [];
+        this.currentXmlIndex = 0;
         this.fileInput.value = '';
 
         this.error.style.display = 'none';
@@ -562,6 +613,10 @@ class XMLViewer {
         this.uploadSection.style.display = 'flex';
         this.renderedView.innerHTML = '';
         this.rawView.textContent = '';
+
+        if (this.xmlSelectorContainer) {
+            this.xmlSelectorContainer.style.display = 'none';
+        }
     }
 }
 
